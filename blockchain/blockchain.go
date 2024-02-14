@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"crypto/sha256"
-	// "encoding/json"
 	"encoding/hex"
 	"fmt"
 	"strconv"
