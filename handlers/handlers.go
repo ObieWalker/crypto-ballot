@@ -24,6 +24,17 @@ type PU struct {
 	PollingUnit string
 }
 
+func HandleGetAllBlockchains(w http.ResponseWriter, r *http.Request){
+	blockchains := blockchain.GetAllBlockChain()
+	bytes, err := json.MarshalIndent(blockchains, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w, string(bytes))
+}
+
+
 func HandleGetPUBlockchain(w http.ResponseWriter, r *http.Request){
 	params := mux.Vars(r)
   pollingUnit := params["pu"]
@@ -111,5 +122,12 @@ func HandleTotalVotes(w http.ResponseWriter, r *http.Request){
 	frequency := blockchain.CalculateVotes()
 
 	respondWithJSON(w, r, http.StatusOK, frequency)
+	return
+}
+
+func HandlePUVotes (w http.ResponseWriter, r *http.Request){
+	votes := blockchain.CalculateVotesByPU()
+
+	respondWithJSON(w, r, http.StatusOK, votes)
 	return
 }
