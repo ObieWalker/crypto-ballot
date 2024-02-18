@@ -4,13 +4,15 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/obiewalker/block-vote/p2p"
 )
 
 
 func main() {
-log.Fatal(run())
+	go p2p.Main(true)
+	log.Fatal(run())
 }
-
 
 func run() error {
 	mux := makeMuxRouter()
@@ -26,7 +28,5 @@ func run() error {
 	if err := s.ListenAndServe(); err != nil {
 		return err
 	}
-
 	return nil
 }
-

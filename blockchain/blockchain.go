@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"crypto/sha256"
-	// "encoding/json"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -27,6 +26,8 @@ type Block struct {
 
 var mutex = &sync.Mutex{}
 
+var TemporaryBroadcastBlock []Block
+
 type Blockchains struct {
 	Chains map[string][]Block
 }
@@ -47,6 +48,7 @@ func CreatePUBlockchain(pollingUnit string) []Block {
 }
 	newChain := []Block{genesisBlock}
 	fullData.Chains[pollingUnit] = newChain
+	TemporaryBroadcastBlock = append(TemporaryBroadcastBlock, genesisBlock)
 
 	return fullData.Chains[pollingUnit]
 }
@@ -68,9 +70,14 @@ func AddBlock(pollingUnit string, voterId string, electionType string, selection
 		PreviousHash: lastBlock.Hash,
 		Timestamp:    time.Now().String(),
 	}
+
+	// In the real world application, the next lines of code would be
+	// handled by the connected nodes after the block is broadcast
 	newBlock.mine(_difficulty)
+	// I am doing this to avoid race conditions
 	mutex.Lock()
 	fullData.Chains[pollingUnit] = append(fullData.Chains[pollingUnit], newBlock)
+	TemporaryBroadcastBlock = append(TemporaryBroadcastBlock, newBlock)
 	mutex.Unlock()
 	return fullData.Chains[pollingUnit]
 }
@@ -106,6 +113,11 @@ func GetPUBlockChain(pollingUnit string) []Block {
 	return blockchain
 }
 
+func GetAllBlockChain() Blockchains{
+	return fullData
+}
+
+// This ensures the same voter does not vote twice at the same polling unit
 func CheckVoterIntegrity(voterID string, pollingUnit string) (bool, error) {
 	if _, ok := fullData.Chains[pollingUnit]; !ok {
 		return false, &errors.PollingUnitNotExistError{}
@@ -142,4 +154,17 @@ func CalculateVotes() map[string]int {
 		}
 	}
 	return frequency
+}
+
+func CalculateVotesByPU() map[string]map[string]int {
+	puVotes := make(map[string]map[string]int )
+	for _, val := range fullData.Chains {
+		votes, err := CalculatePUVotes(val[0].PollingUnit)
+
+		if err != "" {
+			fmt.Println("Error getting votes")
+		}
+		puVotes[val[0].PollingUnit] = votes
+	}
+	return puVotes
 }
