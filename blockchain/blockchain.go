@@ -53,11 +53,6 @@ func CreatePUBlockchain(pollingUnit string) []Block {
 	return fullData.Chains[pollingUnit]
 }
 
-func UpdatePUBlockchain(data Blockchains, pollingUnit string, block Block) []Block {
-	fullData.Chains[pollingUnit] = append(fullData.Chains[pollingUnit], block)
-	return fullData.Chains[pollingUnit]
-}
-
 func AddBlock(pollingUnit string, voterId string, electionType string, selection string) []Block{
 	lastBlock := fullData.Chains[pollingUnit][len(fullData.Chains[pollingUnit])-1]
 	b := sha256.Sum256([]byte(voterId))
