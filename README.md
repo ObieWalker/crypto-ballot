@@ -9,9 +9,6 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="">
-    <img src="assets/images/logo.png" alt="Logo" width="80" height="80">
-  </a>
 
   <h3 align="center">An application that simulates voting using Blockchain.</h3>
 
@@ -60,7 +57,7 @@ This project displays features and implementation of a blockchain voting applica
 
 This application was built primarily with Golang as it is the backend application of a supposed voting app. The endpoints can be tested with postman and data can be gotten using your browser.
 
-* [![Golang][go.dev]][Golang-url]
+* [![Golang][golang]][Go-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -207,4 +204,8 @@ Use this space to list resources you find helpful and would like to give credit 
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
 [linkedin-url]: https://www.linkedin.com/in/obi-walker-a9b94371/
-
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[license-shield]: https://img.shields.io/github/license/
+[license-url]: https://github.com/ObieWalker/crypto-ballot/blob/develop/LICENSE.txt
+[Golang]: https://img.shields.io/badge/go-000000?style=for-the-badge&logo=go&logoColor=#007D9C
+[Go-url]: https://go.dev/
