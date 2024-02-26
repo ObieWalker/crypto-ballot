@@ -4,60 +4,37 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
-	"sync"
 
 	"github.com/obiewalker/block-vote/utils"
 )
 
-type Block struct {
-	VoterId					string
-	ElectionType 		string
-	PollingUnit			string
-	Selection				string
-	Hash        		string
-	PreviousHash		string
-	Timestamp    		string
-	Pow          		int
-	Difficulty	    int
+var TemporaryBroadcastBlock []utils.Block
+
+var fullData = utils.Blockchains{
+	Chains: make(map[string][]utils.Block),
 }
 
-var mutex = &sync.Mutex{}
-
-var TemporaryBroadcastBlock []Block
-
-type Blockchains struct {
-	Chains map[string][]Block
-}
-
-var fullData = Blockchains{
-	Chains: make(map[string][]Block),
-}
-
-var _difficulty = 5
-
-func CreatePUBlockchain(pollingUnit string) []Block {
-	genesisBlock := Block{}
-	genesisBlock = Block{
+func CreatePUBlockchain(pollingUnit string) []utils.Block {
+	genesisBlock := utils.Block{}
+	genesisBlock = utils.Block{
 		PollingUnit: pollingUnit,
-		Hash: genesisBlock.calculateHash(),		
+		Hash: utils.CalculateHash(genesisBlock),		
 		Timestamp: time.Now().String(),
-		Difficulty: _difficulty,
+		Difficulty: utils.Difficulty,
 }
-	newChain := []Block{genesisBlock}
+	newChain := []utils.Block{genesisBlock}
 	fullData.Chains[pollingUnit] = newChain
 	TemporaryBroadcastBlock = append(TemporaryBroadcastBlock, genesisBlock)
 
 	return fullData.Chains[pollingUnit]
 }
 
-func AddBlock(pollingUnit string, voterId string, electionType string, selection string) []Block{
+func AddBlock(pollingUnit string, voterId string, electionType string, selection string) []utils.Block{
 	lastBlock := fullData.Chains[pollingUnit][len(fullData.Chains[pollingUnit])-1]
 	b := sha256.Sum256([]byte(voterId))
 	hashedVoterId := hex.EncodeToString(b[:])
-	newBlock := Block{
+	newBlock := utils.Block{
 		VoterId:			hashedVoterId,
 		ElectionType: electionType,
 		PollingUnit:  pollingUnit,
@@ -66,29 +43,8 @@ func AddBlock(pollingUnit string, voterId string, electionType string, selection
 		Timestamp:    time.Now().String(),
 	}
 
-	// In the real world application, the next lines of code would be
-	// handled by the connected nodes after the block is broadcast
-	newBlock.mine(_difficulty)
-	// I am doing this to avoid race conditions
-	mutex.Lock()
-	fullData.Chains[pollingUnit] = append(fullData.Chains[pollingUnit], newBlock)
 	TemporaryBroadcastBlock = append(TemporaryBroadcastBlock, newBlock)
-	mutex.Unlock()
 	return fullData.Chains[pollingUnit]
-}
-
-func (b Block) calculateHash() string {
-	voterData := fmt.Sprint(b.VoterId) + b.ElectionType + b.PollingUnit + b.Selection
-	blockData := b.PreviousHash + voterData + b.Timestamp + strconv.Itoa(b.Pow)
-	blockHash := sha256.Sum256([]byte(blockData))
-	return fmt.Sprintf("%x", blockHash)
-}
-
-func (b *Block) mine(difficulty int) {
-	for !strings.HasPrefix(b.Hash, strings.Repeat("0", difficulty)) {
-		b.Pow++
-		b.Hash = b.calculateHash()
-	}
 }
 
 func IsBlockChainValid(pollingUnit string) bool {
@@ -96,26 +52,26 @@ func IsBlockChainValid(pollingUnit string) bool {
 	for i := range blockchain[1:] {
 		previousBlock := blockchain[i]
 		currentBlock := blockchain[i+1]
-		if currentBlock.Hash != currentBlock.calculateHash() || currentBlock.PreviousHash != previousBlock.Hash {
+		if currentBlock.Hash != utils.CalculateHash(currentBlock) || currentBlock.PreviousHash != previousBlock.Hash {
 			return false
 		}
 	}
 	return true
 }
 
-func GetPUBlockChain(pollingUnit string) []Block {
+func GetPUBlockChain(pollingUnit string) []utils.Block {
 	blockchain := fullData.Chains[pollingUnit]
 	return blockchain
 }
 
-func GetAllBlockChain() Blockchains{
+func GetAllBlockChain() utils.Blockchains{
 	return fullData
 }
 
 // This ensures the same voter does not vote twice at the same polling unit
 func CheckVoterIntegrity(voterID string, pollingUnit string) (bool, error) {
 	if _, ok := fullData.Chains[pollingUnit]; !ok {
-		return false, &errors.PollingUnitNotExistError{}
+		return false, &utils.PollingUnitNotExistError{}
 	}
 
 	b := sha256.Sum256([]byte(voterID))
@@ -123,7 +79,7 @@ func CheckVoterIntegrity(voterID string, pollingUnit string) (bool, error) {
 	
 	for _, val := range fullData.Chains[pollingUnit][1:] {
 		if val.VoterId == hashedVoterId {
-			return false, &errors.VoterAlreadyVotedError{}
+			return false, &utils.VoterAlreadyVotedError{}
 		}
 	}
 	return true, nil

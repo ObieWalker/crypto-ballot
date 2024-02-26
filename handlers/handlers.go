@@ -4,25 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/mux"
 
 	"github.com/obiewalker/block-vote/blockchain"
+	"github.com/obiewalker/block-vote/utils"
 )
-
-var mutex = &sync.Mutex{}
-
-type VoteData struct {
-	VoterId string
-	ElectionType string
-	Selection string
-	PollingUnit string
-}
-
-type PU struct {
-	PollingUnit string
-}
 
 func HandleGetAllBlockchains(w http.ResponseWriter, r *http.Request){
 	blockchains := blockchain.GetAllBlockChain()
@@ -61,7 +48,7 @@ func respondWithJSON(w http.ResponseWriter, r *http.Request, code int, payload i
 
 func HandleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var d VoteData
+	var d utils.VoteData
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&d); err != nil {
@@ -82,7 +69,7 @@ func HandleWriteBlock(w http.ResponseWriter, r *http.Request) {
 
 func HandleCreatePU(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var p PU
+	var p utils.PU
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
