@@ -1,4 +1,4 @@
-package errors
+package utils
 
 type PollingUnitNotExistError struct{}
 type VoterAlreadyVotedError struct{}

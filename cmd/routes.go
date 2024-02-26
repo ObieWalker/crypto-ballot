@@ -6,7 +6,6 @@ import (
 	"github.com/obiewalker/block-vote/handlers"
 )
 
-
 func makeMuxRouter() http.Handler {
 	muxRouter := mux.NewRouter()
 	muxRouter.HandleFunc("/", handlers.HandleGetAllBlockchains).Methods("GET")

@@ -1,7 +1,6 @@
 package pubsubpkg
 
 import (
-	// "bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,9 +14,9 @@ import (
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 
 	"github.com/obiewalker/block-vote/blockchain"
+	"github.com/obiewalker/block-vote/utils"
 )
 
-var mutex = &sync.Mutex{}
 
 func initDHT(ctx context.Context, h host.Host) *dht.IpfsDHT {
 	kademliaDHT, err := dht.New(ctx, h)
@@ -90,28 +89,26 @@ func PublishData(ctx context.Context, topic *pubsub.Topic) {
 func ReadIncoming(ctx context.Context, sub *pubsub.Subscription, topic *pubsub.Topic, host bool) {
 	for {
 		if !host {
-			var newBlock blockchain.Block
-			var fullData = blockchain.Blockchains{
-				Chains: make(map[string][]blockchain.Block),
+			var newBlock utils.Block
+			var isNewBlock bool
+			var fullData = utils.Blockchains{
+				Chains: make(map[string][]utils.Block),
 			}
 			m, err := sub.Next(ctx)
 			if err != nil {
 				panic(err)
 			}
 			pu := m.Message.Data
-			if err := json.Unmarshal(pu, &newBlock); err != nil {
-        panic(err)
-    	}
-			mutex.Lock()
-			fullData.Chains[newBlock.PollingUnit] = append(fullData.Chains[newBlock.PollingUnit], newBlock)
-			mutex.Unlock()
+			utils.UnmarshalVaryingStructs(pu, &newBlock, &fullData, &isNewBlock)
 
-			bytes, err := json.Marshal(fullData.Chains[newBlock.PollingUnit])
-			if err != nil {
-				fmt.Println("Error Marshalling", err)
-			}
-			if err := topic.Publish(ctx, []byte(bytes)); err != nil {
-				fmt.Println("### Publish error:", err)
+			if isNewBlock {
+				bytes, err := json.Marshal(fullData.Chains[newBlock.PollingUnit])
+				if err != nil {
+					fmt.Println("Error Marshalling", err)
+				}
+				if err := topic.Publish(ctx, []byte(bytes)); err != nil {
+					fmt.Println("### Publish error:", err)
+				}
 			}
 		}
 	}
